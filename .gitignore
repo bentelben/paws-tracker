@@ -1,0 +1,5 @@
+# Веб-сервер
+website/.venv/
+website/**/__pycache__/
+
+website/.env

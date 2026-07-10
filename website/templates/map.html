@@ -1,0 +1,69 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>map</title>
+        <style>
+            #mapWrapper {
+                position: relative;
+                display: inline-block; 
+            }
+
+            #mapWrapper > div {
+                position: absolute;
+                transform: translate(-50%, -50%);
+                width: 14px;
+                height: 14px;
+                background-color: #ffff00;
+                z-index: 1;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="mapWrapper">
+            <img id="mapImage">
+        </div>
+    </body>
+    <script>
+        var mapImageUrl = '{% static map_image_url %}';
+        var mapImageWidth = {{ map_image_width }};
+        var mapImageHeight = {{ map_image_height }};
+        var mapRatio = {{ map_ratio }};
+
+        // Sorted by time array of objects {'x': ..., 'y': ..., 'time': ...}
+        var mdLocationArray = {{ md_location_array|safe }};
+    </script>
+    <script>
+        const mapWrapper = document.getElementById('mapWrapper');
+        const mapImage = document.getElementById('mapImage');
+        mapImage.src = mapImageUrl;
+
+        function createMarker() {
+            const newMarker = document.createElement('div');
+            mapWrapper.appendChild(newMarker);
+            return newMarker;
+        }
+
+        function setMarkerPosition(markerElement, metersX, metersY) {
+            const percentX = (metersX * mapRatio / mapImageWidth ) * 100;
+            const percentY = (metersY * mapRatio / mapImageHeight) * 100;
+
+            markerElement.style.left = percentX + '%';
+            markerElement.style.top  = percentY + '%';
+        }
+
+        function placeAllMarkers() {
+            for (let i = 0; i < mdLocationArray.length; i++) {
+                mdLocationArray[i].marker = createMarker();
+                setMarkerPosition(
+                    mdLocationArray[i].marker,
+                    mdLocationArray[i].x,
+                    mdLocationArray[i].y
+                );
+            }
+        }
+
+        placeAllMarkers();
+    </script>
+</html>
