@@ -65,20 +65,32 @@
         const dayInput = document.getElementById('dayInput');
         const timeInput = document.getElementById('timeInput');
 
-        function getSelectedDateTime() {
+        function GetSelectedDateTime() {
             const selectedDateTime = new Date(`${dayInput.value}T00:00`);
             selectedDateTime.setSeconds(selectedDateTime.getSeconds() + parseInt(timeInput.value))
             return selectedDateTime;
         }
 
         /* Markers drawing */
-        function createMarker() {
+        
+        function CreateMarker() {
             const newMarker = document.createElement('div');
+            SetMarkerSmall(newMarker);
             mapWrapper.appendChild(newMarker);
             return newMarker;
         }
 
-        function setMarkerPosition(markerElement, metersX, metersY) {
+        function SetMarkerSmall(marker) {
+            marker.classList.remove('map-big-marker');
+            marker.classList.add('map-small-marker');
+        }
+
+        function SetMarkerBig(marker) {
+            marker.classList.add('map-big-marker');
+            marker.classList.remove('map-small-marker');
+        }
+
+        function SetMarkerPosition(markerElement, metersX, metersY) {
             const percentX = (metersX * mapRatio / mapImageWidth ) * 100;
             const percentY = (metersY * mapRatio / mapImageHeight) * 100;
 
@@ -87,26 +99,58 @@
         }
 
         function DrawHistory() {
-            const selectedTime = getSelectedDateTime().getTime()/1000;
+            const selectedTime = GetSelectedDateTime().getTime()/1000;
 
             markers.forEach(marker => {
-                marker.remove();
+                marker.element.remove();
             });
             markers = [];
 
             locations.forEach(loc => {
                 if (selectedTime - historyPeriod <= loc.time && loc.time <= selectedTime) {
-                    const marker = createMarker();
-                    marker.classList.add('map-small-marker');
-                    setMarkerPosition(marker, loc.x, loc.y);
-                    markers.push(marker);
+                    const marker = CreateMarker();
+                    SetMarkerPosition(marker, loc.x, loc.y);
+                    markers.push({
+                        'element': marker,
+                        'time': loc.time
+                    });
                 }
             });
-            markers[markers.length-1].classList.remove('map-small-marker');
-            markers[markers.length-1].classList.add('map-big-marker');
+            
+            if (markers.length > 0)
+                SetMarkerBig(markers[markers.length - 1].element);
+        }
+
+        function DrawLive(newLocations) {
+            const selectedTime = GetSelectedDateTime().getTime()/1000;
+
+            if (newLocations.length === 0)
+                return;
+
+            while (markers.length > 0 && markers[0].time < selectedTime - historyPeriod)
+                markers.shift();
+
+            if (markers.length > 0)
+                SetMarkerSmall(markers[markers.length - 1].element);
+            console.log(newLocations)
+            newLocations.forEach(loc => {
+                if (selectedTime - historyPeriod < loc.time) {
+                    console.log('yes')
+                    const marker = CreateMarker();
+                    SetMarkerPosition(marker, loc.x, loc.y);
+                    markers.push({
+                        'element': marker,
+                        'time': loc.time
+                    });
+                }
+            });
+
+            if (markers.length > 0)
+                SetMarkerBig(markers[markers.length - 1].element);
         }
 
         /* API requests */
+
         async function FetchDay() {
             const fetchUrlTemplate = "{% url 'main:api_day' date_str='PLACEHOLDER' %}";
             const response = await fetch(
@@ -119,7 +163,7 @@
                 return;
             }
 
-            data = await response.json()
+            data = await response.json();
 
             if (!isLive)
                 locations = data;
@@ -138,10 +182,13 @@
                 return;
             }
 
-            data = await response.json()
-
-            if (isLive)
+            data = await response.json();
+            
+            if (isLive) {
+                DrawLive(data);
                 locations = locations.concat(data);
+            }
+
         }
         
         /* Live mode */
@@ -221,7 +268,7 @@
         }
 
         async function onTimeInputChange() {
-            if (getSelectedDateTime().getTime() >= (new Date()).getTime()) {
+            if (GetSelectedDateTime().getTime() >= (new Date()).getTime()) {
                 await EnableLiveMode();
                 return;
             }

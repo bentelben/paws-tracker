@@ -5,8 +5,8 @@ from django.utils.timezone import make_aware, now
 
 from main.models import Location
 
-import json
-from datetime import datetime, time, timedelta
+import random
+from datetime import datetime, time, timedelta, timezone
 
 class MapView(View):
     def get(self, request: HttpRequest):
@@ -55,8 +55,10 @@ class GetDayDataView(View):
 
 class GetLiveUpdatesView(View):
     def get(self, request: HttpRequest, last_time: int):
-        start = make_aware(datetime.fromtimestamp(last_time))
+        last_time += 1
 
+        start = datetime.fromtimestamp(last_time, tz=timezone.utc)
+        
         if start < now() - timedelta(days=1):
             start = now() - timedelta(days=1)
 
@@ -68,3 +70,15 @@ class GetLiveUpdatesView(View):
             [loc.to_dict() for loc in locations],
             safe = False
         )
+
+class GenerateDotView(View):
+    def get(self, request: HttpRequest):
+        last_location = Location.objects.order_by('-time').first()
+
+        Location.objects.create(
+            x = min(10, max(0, last_location.x + random.uniform(-1, 1))),
+            y = min(5, max(0, last_location.y + random.uniform(-1, 1))),
+            z = 0,
+            time = make_aware(datetime.now())
+        )
+        return HttpResponseBadRequest()

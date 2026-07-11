@@ -57,6 +57,6 @@ def genday(start_naive):
     Location.objects.bulk_create(locations_list)
 
 
-for i in range(-2, 2):
+for i in range(-3, -1):
     start_naive = datetime.now() + timedelta(days=i)
     genday(start_naive)
