@@ -4,29 +4,24 @@ from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBad
 from django.utils.timezone import make_aware, now
 
 from main.models import Location
+from main.maps import TEST_MAP
 
 import random
 from datetime import datetime, time, timedelta, timezone
 
+SELECTED_MAP = TEST_MAP
+LIVE_UPDATE_INTERVAL = 10  # seconds
+HISTORY_PERIOD       = 600 # seconds
+
 class MapView(View):
     def get(self, request: HttpRequest):
-        map_image_url = 'images/map.png'
-        map_image_width = 1920
-        map_image_height = 1080
-        map_ratio = 145/1 # pixel/meter
-        live_update_interval = 10 # seconds
-        history_period = 600 # seconds
-
         return render(
             request,
             'map.html',
             {
-                'map_image_url': map_image_url,
-                'map_image_width': map_image_width,
-                'map_image_height': map_image_height,
-                'map_ratio': map_ratio,
-                'live_update_interval': live_update_interval,
-                'history_period': history_period
+                'map_image_url': SELECTED_MAP.image_url,
+                'live_update_interval': LIVE_UPDATE_INTERVAL,
+                'history_period': HISTORY_PERIOD
             }
         )
 
@@ -48,10 +43,7 @@ class GetDayDataView(View):
             time__lte = end
         ).order_by('time')
 
-        return JsonResponse(
-            [loc.to_dict() for loc in locations],
-            safe = False
-        )
+        return SELECTED_MAP.locationsToJsonResponse(locations)
 
 class GetLiveUpdatesView(View):
     def get(self, request: HttpRequest, last_time: int):
@@ -66,10 +58,7 @@ class GetLiveUpdatesView(View):
             time__gt = start
         ).order_by('time')
 
-        return JsonResponse(
-            [loc.to_dict() for loc in locations],
-            safe = False
-        )
+        return SELECTED_MAP.locationsToJsonResponse(locations)
 
 class GenerateDotView(View):
     def get(self, request: HttpRequest):

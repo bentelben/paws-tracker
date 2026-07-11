@@ -5,9 +5,6 @@ const dayInput = document.getElementById('dayInput');
 const timeInput = document.getElementById('timeInput');
 
 /* Loading consts */
-const mapImageWidth      = Number( mapWrapper.dataset.mapImageWidth      );
-const mapImageHeight     = Number( mapWrapper.dataset.mapImageHeight     );
-const mapRatio           = Number( mapWrapper.dataset.mapRatio           );
 const liveUpdateInterval = Number( mapWrapper.dataset.liveUpdateInterval );
 const historyPeriod      = Number( mapWrapper.dataset.historyPeriod      );
 const fetchDayUrl        = String( mapWrapper.dataset.fetchDayUrl        );
@@ -27,82 +24,72 @@ function GetSelectedDateTime() {
 
 /* Markers drawing */
 
-function CreateMarker() {
-    const newMarker = document.createElement('div');
+function CreateMarker(loc) {
+    const newMarker = {
+        'element': document.createElement('div'),
+        'location': loc
+    };
+
+    newMarker.element.style.left = loc.x + '%';
+    newMarker.element.style.top  = loc.y + '%';
+    mapWrapper.appendChild(newMarker.element);
     SetMarkerSmall(newMarker);
-    mapWrapper.appendChild(newMarker);
+    markers.push(newMarker);
     return newMarker;
 }
 
+function DeleteMarker(marker) {
+    marker.element.remove();
+}
+
 function SetMarkerSmall(marker) {
-    marker.classList.remove('map-big-marker');
-    marker.classList.add('map-small-marker');
+    marker.element.classList.remove('map-big-marker');
+    marker.element.classList.add('map-small-marker');
 }
 
 function SetMarkerBig(marker) {
-    marker.classList.add('map-big-marker');
-    marker.classList.remove('map-small-marker');
-}
-
-function SetMarkerPosition(markerElement, metersX, metersY) {
-    const percentX = (metersX * mapRatio / mapImageWidth ) * 100;
-    const percentY = (metersY * mapRatio / mapImageHeight) * 100;
-
-    markerElement.style.left = percentX + '%';
-    markerElement.style.top  = percentY + '%';
+    marker.element.classList.add('map-big-marker');
+    marker.element.classList.remove('map-small-marker');
 }
 
 function DrawHistory() {
     const selectedTime = GetSelectedDateTime().getTime()/1000;
 
     markers.forEach(marker => {
-        marker.element.remove();
+        DeleteMarker(marker);
     });
     markers = [];
 
     locations.forEach(loc => {
-        if (selectedTime - historyPeriod <= loc.time && loc.time <= selectedTime) {
-            const marker = CreateMarker();
-            SetMarkerPosition(marker, loc.x, loc.y);
-            markers.push({
-                'element': marker,
-                'time': loc.time
-            });
-        }
+        if (selectedTime - historyPeriod <= loc.time && loc.time <= selectedTime)
+            CreateMarker(loc);
     });
     
     if (markers.length > 0)
-        SetMarkerBig(markers[markers.length - 1].element);
+        SetMarkerBig(markers[markers.length - 1]);
 }
 
 function DrawLive(newLocations) {
     const selectedTime = GetSelectedDateTime().getTime()/1000;
 
-    while (markers.length > 0 && markers[0].time < selectedTime - historyPeriod) {
-        markers[0].element.remove();
+    while (markers.length > 0 && markers[0].location.time < selectedTime - historyPeriod) {
+        DeleteMarker(markers[0]);
         markers.shift();
     }
-
-    if (markers.length > 0)
-        SetMarkerSmall(markers[markers.length - 1].element);
 
     if (newLocations.length === 0)
         return;
 
+    if (markers.length > 0)
+        SetMarkerSmall(markers[markers.length - 1]);
+
     newLocations.forEach(loc => {
-        if (selectedTime - historyPeriod < loc.time) {
-            console.log('yes')
-            const marker = CreateMarker();
-            SetMarkerPosition(marker, loc.x, loc.y);
-            markers.push({
-                'element': marker,
-                'time': loc.time
-            });
-        }
+        if (selectedTime - historyPeriod < loc.time)
+            CreateMarker(loc);
     });
 
     if (markers.length > 0)
-        SetMarkerBig(markers[markers.length - 1].element);
+        SetMarkerBig(markers[markers.length - 1]);
 }
 
 /* API requests */

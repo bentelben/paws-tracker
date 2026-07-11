@@ -5,11 +5,3 @@ class Location(models.Model):
     y = models.FloatField()
     z = models.FloatField()
     time = models.DateTimeField()
-
-    def to_dict(self):
-        return {
-            'x': self.x,
-            'y': self.y,
-            'z': self.z,
-            'time': int(self.time.timestamp())
-        }
