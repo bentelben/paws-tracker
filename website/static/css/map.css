@@ -1,0 +1,31 @@
+#mapWrapper {
+    position: relative;
+    display: inline-block; 
+}
+
+#mapImage {
+    max-width: 100%;
+}
+
+#mapWrapper > div {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.map-small-marker {
+    width: 7px;
+    height: 7px;
+    background-color: #ff0000;
+}
+
+.map-big-marker {
+    z-index: 2;
+    width: 14px;
+    height: 14px;
+    background-color: #ff0000;
+}
+
+#timeInput {
+    width: 100%;
+}
