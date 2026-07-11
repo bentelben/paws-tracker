@@ -10,35 +10,68 @@
                 display: inline-block; 
             }
 
+            #mapImage {
+                max-width: 100%;
+            }
+
             #mapWrapper > div {
                 position: absolute;
                 transform: translate(-50%, -50%);
+                z-index: 1;
+            }
+
+            .map-small-marker {
+                width: 7px;
+                height: 7px;
+                background-color: #ff0000;
+            }
+
+            .map-big-marker {
+                z-index: 2;
                 width: 14px;
                 height: 14px;
-                background-color: #ffff00;
-                z-index: 1;
+                background-color: #ff0000;
+            }
+
+            #timeInput {
+                width: 100%;
             }
         </style>
     </head>
     <body>
+        
         <div id="mapWrapper">
-            <img id="mapImage">
+            <img id="mapImage" src="{% static map_image_url %}">
+        </div>
+        <div id="bottomPanel">
+            <input id="dayInput" type="date">
+            <input id="timeInput" type="range" min="0" max="86399" step="1" value="0">
         </div>
     </body>
     <script>
-        var mapImageUrl = '{% static map_image_url %}';
         var mapImageWidth = {{ map_image_width }};
         var mapImageHeight = {{ map_image_height }};
         var mapRatio = {{ map_ratio }};
+        var liveUpdateInterval = {{ live_update_interval }};
+        var historyPeriod = {{ history_period }};
 
-        // Sorted by time array of objects {'x': ..., 'y': ..., 'time': ...}
-        var mdLocationArray = {{ md_location_array|safe }};
+        var locations = [];
+        var markers = [];
+        var isLive = false;
+        var liveTimerId = null;
     </script>
     <script>
         const mapWrapper = document.getElementById('mapWrapper');
-        const mapImage = document.getElementById('mapImage');
-        mapImage.src = mapImageUrl;
+        const dayInput = document.getElementById('dayInput');
+        const timeInput = document.getElementById('timeInput');
 
+        function getSelectedDateTime() {
+            const selectedDateTime = new Date(`${dayInput.value}T00:00`);
+            selectedDateTime.setSeconds(selectedDateTime.getSeconds() + parseInt(timeInput.value))
+            return selectedDateTime;
+        }
+
+        /* Markers drawing */
         function createMarker() {
             const newMarker = document.createElement('div');
             mapWrapper.appendChild(newMarker);
@@ -53,17 +86,156 @@
             markerElement.style.top  = percentY + '%';
         }
 
-        function placeAllMarkers() {
-            for (let i = 0; i < mdLocationArray.length; i++) {
-                mdLocationArray[i].marker = createMarker();
-                setMarkerPosition(
-                    mdLocationArray[i].marker,
-                    mdLocationArray[i].x,
-                    mdLocationArray[i].y
-                );
+        function DrawHistory() {
+            const selectedTime = getSelectedDateTime().getTime()/1000;
+
+            markers.forEach(marker => {
+                marker.remove();
+            });
+            markers = [];
+
+            locations.forEach(loc => {
+                if (selectedTime - historyPeriod <= loc.time && loc.time <= selectedTime) {
+                    const marker = createMarker();
+                    marker.classList.add('map-small-marker');
+                    setMarkerPosition(marker, loc.x, loc.y);
+                    markers.push(marker);
+                }
+            });
+            markers[markers.length-1].classList.remove('map-small-marker');
+            markers[markers.length-1].classList.add('map-big-marker');
+        }
+
+        /* API requests */
+        async function FetchDay() {
+            const fetchUrlTemplate = "{% url 'main:api_day' date_str='PLACEHOLDER' %}";
+            const response = await fetch(
+                fetchUrlTemplate.replace('PLACEHOLDER', dayInput.value)
+            );
+
+            if (!response.ok) {
+                alert('Не удалось загрузить день');
+                locations = [];
+                return;
+            }
+
+            data = await response.json()
+
+            if (!isLive)
+                locations = data;
+        }
+
+        async function FetchLiveUpdates() {
+            const lastTime = (locations.length > 0) ? locations[locations.length-1].time : 0;
+
+            const fetchUrlTemplate = "{% url 'main:api_live' last_time=0 %}";
+            const response = await fetch(
+                fetchUrlTemplate.replace('0', lastTime)
+            );
+            
+            if (!response.ok) {
+                alert('Не удалось загрузить лайв данные');
+                return;
+            }
+
+            data = await response.json()
+
+            if (isLive)
+                locations = locations.concat(data);
+        }
+        
+        /* Live mode */
+
+        function ResetDayInput() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            
+            dayInput.value = `${year}-${month}-${day}`;
+        }
+
+        function ResetTimeInput() {
+            const now = new Date();
+            timeInput.value = now.getHours()*60*60 + now.getMinutes()*60 + now.getSeconds();
+        }
+
+        async function CheckLiveUpdates() {
+            ResetDayInput();
+            ResetTimeInput();
+            await FetchLiveUpdates();
+        }
+
+        async function StartLiveTimer() {
+            if (liveTimerId === null)
+                liveTimerId = setInterval(CheckLiveUpdates, liveUpdateInterval*1000);
+            await CheckLiveUpdates();
+        }
+
+        function StopLiveTimer() {
+            clearInterval(liveTimerId);
+        }
+
+        async function EnableLiveMode() {
+            ResetDayInput();
+            ResetTimeInput();
+            isLive = true;
+            StartLiveTimer();
+        }
+
+        function DisableLiveMode() {
+            isLive = false;
+            StopLiveTimer();
+            liveTimerId = null;
+        }
+
+        async function onVisibilityChange() {
+            if (isLive) {
+                if (document.hidden) StopLiveTimer();
+                else StartLiveTimer();
             }
         }
 
-        placeAllMarkers();
+        /* Inputs */
+
+        async function onDayInputChange() {
+            const dayStr = dayInput.value;
+            if (!dayStr) {
+                alert('Неверная дата')
+                return;
+            }
+
+            const selectedDay = new Date(dayStr);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (selectedDay.getTime() >= today.getTime()) {
+                await EnableLiveMode();
+                return;
+            }
+
+            if (isLive) DisableLiveMode();
+
+            await FetchDay();
+            await onTimeInputChange();
+        }
+
+        async function onTimeInputChange() {
+            if (getSelectedDateTime().getTime() >= (new Date()).getTime()) {
+                await EnableLiveMode();
+                return;
+            }
+            if (isLive) DisableLiveMode();
+
+            DrawHistory();
+        }
+
+        dayInput.addEventListener('change', onDayInputChange);
+        timeInput.addEventListener('change', onTimeInputChange);
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
+        EnableLiveMode();
+
+        
     </script>
 </html>
