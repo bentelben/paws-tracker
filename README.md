@@ -16,10 +16,10 @@ paws-tracker/
 │   │   ├── firmware/
 │   │   ├── models/
 │   │
-│   ├── mobile_device/     # Мобильное устройство
-│   │   ├── electronics/
-│   │   ├── firmware/
-│   │   ├── models/
+│   └── mobile_device/     # Мобильное устройство
+│       ├── electronics/
+│       ├── firmware/
+│       └── models/
 │
 └── web_server/            # Серверная часть (веб-интерфейс и API)
 ```
