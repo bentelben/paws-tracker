@@ -148,6 +148,11 @@
     transform: translate(-50%, -200%);
 }
 
+.timeline__thumb.live {
+    background-color: var(--red);
+    border-color: white;
+}
+
 .map {
     position: relative;
     display: inline-block; 

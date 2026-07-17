@@ -15,7 +15,6 @@ let timeline = {
     maxValue: 24*60 - 1,
     value: 0,
     _valueBeforeTap: 0,
-    _lastDisplayedValue: '',
     _isDragging: false,
     _isHovering: false,
 
@@ -42,7 +41,8 @@ let timeline = {
             const minutes = value % 60;
             return String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
         }
-        this.thumbElement.textContent = getTimeString(value);
+        this.thumbElement.textContent = getTimeString(value);    
+        timeline.thumbElement.classList.remove('live');
     },
 
     setThumbPosition(value) {
@@ -60,7 +60,6 @@ let timeline = {
         this.setFillPosition(value);
         if (notify)
             this.element.dispatchEvent(new CustomEvent('change'));
-        this._lastDisplayedValue = this.thumbElement.textContent;
     },
 
     _onPointerDown(e) {
@@ -86,13 +85,11 @@ let timeline = {
     },
     _onPointerEnter(e) {
         this._valueBeforeTap = this.value;
-        this._lastDisplayedValue = this.thumbElement.textContent;
         this.thumbElement.classList.add('hover');
     },
     _onPointerLeave(e) {
         this.thumbElement.classList.remove('hover');
-        this.setThumbPosition(this.value);
-        this.thumbElement.textContent = this._lastDisplayedValue;
+        this.setValue(this.value);
     },
     _onPointerCancel(e) {
         this.setValue(this._valueBeforeTap);
@@ -102,6 +99,7 @@ let timeline = {
         const now = new Date();
         this.setValue(now.getHours()*60 + now.getMinutes(), false)
         this.thumbElement.textContent = 'ЛАЙВ';
+        this.thumbElement.classList.add('live');
     },
 
     init() {
@@ -375,7 +373,7 @@ async function onVisibilityChange() {
 }
 
 async function onTimelineChange() {
-    if (GetSelectedTime() >= (new Date()).getTime()/1000) {
+    if (GetSelectedTime()/60 >= Math.floor((new Date()).getTime()/1000/60)) {
         timeline.setDefault();
         await EnableLiveMode();
         return;
