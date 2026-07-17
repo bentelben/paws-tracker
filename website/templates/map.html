@@ -14,21 +14,21 @@
             </div>
         </div>
         <div class="map-section">
-            <div id="mapWrapper" class="map"
+            <div id="map" class="map"
                 data-live-update-interval="{{ live_update_interval }}"
-                data-history-period="{{ history_period }}"
+                data-map-marker-capacity="{{ map_marker_capacity }}"
                 data-fetch-day-url="{% url 'main:api_day' date_str='PLACEHOLDER' %}"
                 data-fetch-live-url="{% url 'main:api_live' last_time=0 %}">
 
-                <img id="mapImage" class="map__image" src="{% static map_image_url %}?v={{version}}">
+                <img class="map__image" src="{% static map_image_url %}?v={{version}}">
             </div>
         </div>
         <div class="footer">
-            <div id="calendarButton" class="calendar-button floating-item">
-                <input id="dayInput" type="date" style="visibility: hidden; width: 0; height: 0;">
+            <div id="calendar" class="calendar-button floating-item">
+                <input id="calendarInput" type="date" style="visibility: hidden; width: 0; height: 0;">
             </div>
 
-            <div id="dateContainer" class="date-info floating-item"></div>
+            <div id="calendarOutput" class="date-info floating-item"></div>
 
             <div id="timeline" class="timeline">
                 <div id="timelineTrack" class="timeline__track floating-item">

@@ -1,3 +1,11 @@
+/* Settings */
+const settings = document.getElementById('map').dataset;
+
+const LIVE_UPDATE_INTERVAL = Number( settings.liveUpdateInterval );
+const MAP_MARKER_CAPACITY  = Number( settings.mapMarkerCapacity  );
+const FETCH_DAY_URL        = String( settings.fetchDayUrl        );
+const FETCH_LIVE_URL       = String( settings.fetchLiveUrl       );
+
 /* Timeline input */
 let timeline = {
     element: document.getElementById('timeline'),
@@ -108,9 +116,9 @@ let timeline = {
 };
 
 let calendar = {
-    button: document.getElementById('calendarButton'),
-    input: document.getElementById('dayInput'),
-    output: document.getElementById('dateContainer'),
+    button: document.getElementById('calendar'),
+    input: document.getElementById('calendarInput'),
+    output: document.getElementById('calendarOutput'),
     value: new Date(),
 
     _stringToDate(value) {
@@ -157,8 +165,8 @@ let calendar = {
 };
 
 let map = {
-    element: document.getElementById('mapWrapper'),
-    markerCapacity: 10,
+    element: document.getElementById('map'),
+    markerCapacity: MAP_MARKER_CAPACITY,
     _smallMarkers: [],
     _bigMarker: undefined,
 
@@ -179,6 +187,7 @@ let map = {
     normalizeBigMarker() {
         if (this._bigMarker === undefined) return;
 
+        this._bigMarker.classList.remove('big');
         this._smallMarkers.push(this._bigMarker);
         this._bigMarker = undefined;
         this._validateCapacity();
@@ -222,18 +231,8 @@ let map = {
 timeline.init();
 calendar.init();
 
-/* DOM Elements */
-const mapWrapper = document.getElementById('mapWrapper');
-
-/* Loading consts */
-const liveUpdateInterval = Number( mapWrapper.dataset.liveUpdateInterval );
-const historyPeriod      = Number( mapWrapper.dataset.historyPeriod      );
-const fetchDayUrl        = String( mapWrapper.dataset.fetchDayUrl        );
-const fetchLiveUrl       = String( mapWrapper.dataset.fetchLiveUrl       );
-
 /* Global variables */
 var locations = [];
-var markers = [];
 var isLive = false;
 var liveTimerId = null;
 
@@ -279,7 +278,7 @@ function DrawLive(newLocations) {
 
 async function FetchDay() {
     const response = await fetch(
-        fetchDayUrl.replace('PLACEHOLDER', dayInput.value)
+        FETCH_DAY_URL.replace('PLACEHOLDER', calendar.input.value)
     );
 
     if (!response.ok) {
@@ -298,7 +297,7 @@ async function FetchLiveUpdates() {
     const lastTime = (locations.length > 0) ? locations[locations.length-1].time : 0;
 
     const response = await fetch(
-        fetchLiveUrl.replace('0', lastTime)
+        FETCH_LIVE_URL.replace('0', lastTime)
     );
     
     if (!response.ok) {
@@ -324,7 +323,7 @@ async function CheckLiveUpdates() {
 
 async function StartLiveTimer() {
     if (liveTimerId === null)
-        liveTimerId = setInterval(CheckLiveUpdates, liveUpdateInterval*1000);
+        liveTimerId = setInterval(CheckLiveUpdates, LIVE_UPDATE_INTERVAL*1000);
     await CheckLiveUpdates();
 }
 
@@ -334,8 +333,10 @@ function StopLiveTimer() {
 }
 
 async function EnableLiveMode() {
-    isLive = true;
-    StartLiveTimer();
+    if (!isLive) {
+        isLive = true;
+        StartLiveTimer();
+    }
 }
 
 function DisableLiveMode() {
@@ -353,6 +354,7 @@ async function onVisibilityChange() {
 /* Inputs */
 async function onTimelineChange() {
     if (GetSelectedTime() >= (new Date()).getTime()/1000) {
+        timeline.setDefault();
         await EnableLiveMode();
         return;
     }
@@ -364,10 +366,13 @@ async function onTimelineChange() {
 }
 
 async function onCalendarChange() {
+    map.clear();
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     if (calendar.value.getTime() >= today.getTime()) {
+        calendar.setDefault();
         await EnableLiveMode();
         return;
     }

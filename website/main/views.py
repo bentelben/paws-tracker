@@ -12,7 +12,7 @@ import time as t
 
 SELECTED_MAP = TEST_MAP
 LIVE_UPDATE_INTERVAL = 10  # seconds
-HISTORY_PERIOD       = 600 # seconds
+MAP_MARKER_CAPACITY  = 20
 
 class MapView(View):
     def get(self, request: HttpRequest):
@@ -22,7 +22,7 @@ class MapView(View):
             {
                 'map_image_url': SELECTED_MAP.image_url,
                 'live_update_interval': LIVE_UPDATE_INTERVAL,
-                'history_period': HISTORY_PERIOD,
+                'map_marker_capacity': MAP_MARKER_CAPACITY,
                 'version': t.time(),
             }
         )
