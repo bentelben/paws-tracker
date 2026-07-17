@@ -1,5 +1,7 @@
-const FETCH_STATUS_URL = '/api/status';
-const STATUS_UPDATE_INTERVAL = 10*1000;
+const statusWrapper = document.getElementById('statusWrapper');
+
+const FETCH_STATUS_URL = statusWrapper.dataset.fetchUrl;
+const STATUS_UPDATE_INTERVAL = Number(statusWrapper.dataset.updateInterval)*1000;
 
 const status1 = document.getElementById('status1');
 const status2 = document.getElementById('status2');

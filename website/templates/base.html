@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}{% endblock title %}</title>
+        <link rel="stylesheet" href="{% static 'css/base.css' %}?v={{version}}">
+        {% block extra_styles %}{% endblock extra_styles %}
+    </head>
+    <body>
+        <div class="header">
+            <div class="menu-button"></div>
+            <div id="statusWrapper" class="status-wrapper"
+                data-fetch-url="{% url 'main:api_status' %}"
+                data-update-interval="{{ STATUS_UPDATE_INTERVAL }}"
+                >
+                <div class="status-content">
+                    <!-- Не ставить пробелы и переносы строк между спанами!!! -->
+                    <span id="status1"></span><span id="status2" aria-hidden="true"></span>
+                </div>
+            </div>
+        </div>
+        {% block content %}{% endblock content %}
+    </body>
+    <script src="{% static 'js/base.js' %}?v={{version}}"></script>
+    {% block extra_scripts %}{% endblock extra_scripts %}
+</html>

@@ -243,8 +243,8 @@ function GetSelectedTime() {
     return selectedDateTime.getTime()/1000;
 }
 
-/* Markers drawing */
 
+/* Markers drawing */
 function DrawHistory() {
     map.clear();
 
@@ -275,8 +275,8 @@ function DrawLive(newLocations) {
     map.validateBigMarker();
 }
 
-/* API requests */
 
+/* API requests */
 async function FetchDay() {
     const response = await fetch(
         FETCH_DAY_URL.replace('PLACEHOLDER', calendar.input.value)
@@ -313,7 +313,6 @@ async function FetchLiveUpdates() {
         locations = locations.concat(data);
     }
 }
-
 
 
 /* Live mode */
@@ -366,6 +365,8 @@ function DisableLiveMode() {
     StopLiveTimer();
 }
 
+
+/* Events */
 async function onVisibilityChange() {
     if (isLive) {
         if (document.hidden) StopLiveTimer();
@@ -373,7 +374,6 @@ async function onVisibilityChange() {
     }
 }
 
-/* Inputs */
 async function onTimelineChange() {
     if (GetSelectedTime() >= (new Date()).getTime()/1000) {
         timeline.setDefault();

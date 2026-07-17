@@ -8,7 +8,6 @@ from main.maps import TEST_MAP
 
 import random
 from datetime import datetime, time, timedelta, timezone
-import time as t
 
 SELECTED_MAP = TEST_MAP
 LIVE_UPDATE_INTERVAL = 10  # seconds
@@ -22,8 +21,7 @@ class MapView(View):
             {
                 'map_image_url': SELECTED_MAP.image_url,
                 'live_update_interval': LIVE_UPDATE_INTERVAL,
-                'map_marker_capacity': MAP_MARKER_CAPACITY,
-                'version': t.time(),
+                'map_marker_capacity': MAP_MARKER_CAPACITY
             }
         )
 
