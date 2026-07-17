@@ -5,7 +5,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>map</title>
-        <link rel="stylesheet" href="{% static 'css/map.css' %}">
+        <link rel="stylesheet" href="{% static 'css/map.css' %}?v={{version}}">
     </head>
     <body>
         <div class="header">
@@ -14,13 +14,13 @@
             </div>
         </div>
         <div class="map-section">
-            <div id="mapWrapper"
+            <div id="mapWrapper" class="map"
                 data-live-update-interval="{{ live_update_interval }}"
                 data-history-period="{{ history_period }}"
                 data-fetch-day-url="{% url 'main:api_day' date_str='PLACEHOLDER' %}"
                 data-fetch-live-url="{% url 'main:api_live' last_time=0 %}">
 
-                <img id="mapImage" src="{% static map_image_url %}">
+                <img id="mapImage" class="map__image" src="{% static map_image_url %}?v={{version}}">
             </div>
         </div>
         <div class="footer">
@@ -38,5 +38,5 @@
             </div>
         </div>
     </body>
-    <script src="{% static 'js/map.js' %}"></script>
+    <script src="{% static 'js/map.js' %}?v={{version}}"></script>
 </html>

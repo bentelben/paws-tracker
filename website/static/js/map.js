@@ -1,15 +1,15 @@
 /* Timeline input */
 let timeline = {
-    'element': document.getElementById('timeline'),
-    'trackElement': document.getElementById('timelineTrack'),
-    'fillElement': document.getElementById('timelineFill'),
-    'thumbElement': document.getElementById('timelineThumb'),
-    'maxValue': 24*60 - 1,
-    'value': 0,
-    '_valueBeforeTap': 0,
-    '_lastDisplayedValue': '',
-    '_isDragging': false,
-    '_isHovering': false,
+    element: document.getElementById('timeline'),
+    trackElement: document.getElementById('timelineTrack'),
+    fillElement: document.getElementById('timelineFill'),
+    thumbElement: document.getElementById('timelineThumb'),
+    maxValue: 24*60 - 1,
+    value: 0,
+    _valueBeforeTap: 0,
+    _lastDisplayedValue: '',
+    _isDragging: false,
+    _isHovering: false,
 
     _calcHoverValue(clientX) {
         const rect = this.trackElement.getBoundingClientRect();
@@ -69,10 +69,12 @@ let timeline = {
     },
     _onPointerMove(e) {
         const value = this._calcHoverValue(e.clientX);
-        if (this._isDragging)
-            this.setFillPosition(value);
-        this.setThumbText(value);
-        this.setThumbPosition(value);
+        if (this._isDragging) {
+            this.setValue(value);
+        } else {
+            this.setThumbText(value);
+            this.setThumbPosition(value);
+        }
     },
     _onPointerEnter(e) {
         this._valueBeforeTap = this.value;
@@ -88,6 +90,12 @@ let timeline = {
         this.setValue(this._valueBeforeTap);
     },
 
+    setDefault() {
+        const now = new Date();
+        this.setValue(now.getHours()*60 + now.getMinutes(), false)
+        this.thumbElement.textContent = 'ЛАЙВ';
+    },
+
     init() {
         this.element.addEventListener('pointerdown', this._onPointerDown.bind(this));
         this.element.addEventListener('pointerup', this._onPointerUp.bind(this));
@@ -99,17 +107,123 @@ let timeline = {
 
 };
 
+let calendar = {
+    button: document.getElementById('calendarButton'),
+    input: document.getElementById('dayInput'),
+    output: document.getElementById('dateContainer'),
+    value: new Date(),
+
+    _stringToDate(value) {
+        return new Date(`${value}T00:00`);
+    },
+
+    setValue(value, notify = true) {
+        const year = value.getFullYear();
+        const month = String(value.getMonth() + 1).padStart(2, '0');
+        const day = String(value.getDate()).padStart(2, '0');
+        
+        this.input.value = `${year}-${month}-${day}`;
+        this.output.textContent = `${day}.${month}`;
+        this.value = this._stringToDate(this.input.value);
+
+        if (notify)
+            this.input.dispatchEvent(Event('change', { bubbles: true }));
+    },
+
+    _onButtonClick(e) {
+        this.input.showPicker();
+    },
+
+    _onInputChange(e) {
+        if (!this.input.value) {
+            this.input.value = this._oldValue;
+            e.stopImmediatePropagation();
+            alert('Введена неверная дата');
+            return;
+        }
+
+        this.setValue(this._stringToDate(this.input.value), false);
+    },
+
+    setDefault() {
+        this.setValue(new Date(), false);
+        this.output.textContent = 'Сегодня';
+    },
+
+    init() {
+        this.button.addEventListener('click', this._onButtonClick.bind(this));
+        this.input.addEventListener('change', this._onInputChange.bind(this));
+    },
+};
+
+let map = {
+    element: document.getElementById('mapWrapper'),
+    markerCapacity: 10,
+    _smallMarkers: [],
+    _bigMarker: undefined,
+
+    _validateCapacity() {
+        if (this._smallMarkers.length + (this._bigMarker !== undefined) > this.markerCapacity) {
+            this._smallMarkers.shift().remove();
+        }
+    },
+
+    validateBigMarker() {
+        if (this._bigMarker !== undefined) return;
+        if (this._smallMarkers.length == 0) return;
+
+        this._bigMarker = this._smallMarkers.pop();
+        this._bigMarker.classList.add('big');
+    },
+
+    normalizeBigMarker() {
+        if (this._bigMarker === undefined) return;
+
+        this._smallMarkers.push(this._bigMarker);
+        this._bigMarker = undefined;
+        this._validateCapacity();
+    },
+
+    createMarker(pos, isBig = false) {
+        const newMarker = document.createElement('div');
+        newMarker.style.left = pos.x + '%';
+        newMarker.style.top  = pos.y + '%';
+        newMarker.classList.add('marker');
+        newMarker.appendChild(document.createElement('div'));
+
+        if (isBig) {
+            if (this._bigMarker !== undefined) {
+                this._bigMarker.classList.remove('big');
+                this._smallMarkers.push(this._bigMarker);
+                this._bigMarker = undefined;
+            }
+        }
+
+        this._smallMarkers.push(newMarker);
+        this.element.appendChild(newMarker);
+        if (isBig)
+            this.validateBigMarker();
+
+        this._validateCapacity();
+    },
+
+    clear() {
+        if (this._bigMarker !== undefined) {
+            this._bigMarker.remove();
+            this._bigMarker = undefined;
+        }
+        this._smallMarkers.forEach((element) => {
+            element.remove();
+        });
+        this._smallMarkers = [];
+    }
+};
+
 timeline.init();
-
-
-/* Calendar input */
-const calendarButton = document.getElementById('calendarButton');
-calendarButton.addEventListener('click', () => { dayInput.showPicker(); });
+calendar.init();
 
 /* DOM Elements */
 const mapWrapper = document.getElementById('mapWrapper');
-const dayInput = document.getElementById('dayInput');
-const dateContainer = document.getElementById('dateContainer');
 
 /* Loading consts */
 const liveUpdateInterval = Number( mapWrapper.dataset.liveUpdateInterval );
@@ -123,80 +237,42 @@ var markers = [];
 var isLive = false;
 var liveTimerId = null;
 
-function GetSelectedDateTime() {
-    const selectedDateTime = new Date(`${dayInput.value}T00:00`);
-    selectedDateTime.setSeconds(selectedDateTime.getSeconds() + timeline.value*60); // TODO replace with minutes
-    return selectedDateTime;
+function GetSelectedTime() {
+    const selectedDateTime = new Date(calendar.value);
+    selectedDateTime.setMinutes(selectedDateTime.getMinutes() + timeline.value);
+    return selectedDateTime.getTime()/1000;
 }
 
 /* Markers drawing */
 
-function CreateMarker(loc) {
-    const newMarker = {
-        'element': document.createElement('div'),
-        'location': loc
-    };
-
-    newMarker.element.style.left = loc.x + '%';
-    newMarker.element.style.top  = loc.y + '%';
-    mapWrapper.appendChild(newMarker.element);
-    SetMarkerSmall(newMarker);
-    markers.push(newMarker);
-    return newMarker;
-}
-
-function DeleteMarker(marker) {
-    marker.element.remove();
-}
-
-function SetMarkerSmall(marker) {
-    marker.element.classList.remove('map-big-marker');
-    marker.element.classList.add('map-small-marker');
-}
-
-function SetMarkerBig(marker) {
-    marker.element.classList.add('map-big-marker');
-    marker.element.classList.remove('map-small-marker');
-}
-
 function DrawHistory() {
-    const selectedTime = GetSelectedDateTime().getTime()/1000;
+    map.clear();
 
-    markers.forEach(marker => {
-        DeleteMarker(marker);
-    });
-    markers = [];
+    const selectedTime = GetSelectedTime();
+    let i;
+    for (i = locations.length - 1; i > map.markerCapacity; i--) {
+        if (locations[i].time <= selectedTime) break;
+    }
 
-    locations.forEach(loc => {
-        if (selectedTime - historyPeriod <= loc.time && loc.time <= selectedTime)
-            CreateMarker(loc);
-    });
+    for (let j = Math.max(0, i - map.markerCapacity + 1); j <= i; j++) {
+        map.createMarker(locations[j]);
+    }
     
-    if (markers.length > 0)
-        SetMarkerBig(markers[markers.length - 1]);
+    map.validateBigMarker();
 }
 
 function DrawLive(newLocations) {
-    const selectedTime = GetSelectedDateTime().getTime()/1000;
+    map.normalizeBigMarker();
 
-    while (markers.length > 0 && markers[0].location.time < selectedTime - historyPeriod) {
-        DeleteMarker(markers[0]);
-        markers.shift();
+    for (
+        let i = Math.max(0, newLocations.length - map.markerCapacity);
+        i < newLocations.length;
+        i++
+    ) {
+        map.createMarker(newLocations[i]);
     }
 
-    if (newLocations.length === 0)
-        return;
-
-    if (markers.length > 0)
-        SetMarkerSmall(markers[markers.length - 1]);
-
-    newLocations.forEach(loc => {
-        if (selectedTime - historyPeriod < loc.time)
-            CreateMarker(loc);
-    });
-
-    if (markers.length > 0)
-        SetMarkerBig(markers[markers.length - 1]);
+    map.validateBigMarker();
 }
 
 /* API requests */
@@ -240,28 +316,9 @@ async function FetchLiveUpdates() {
 }
 
 /* Live mode */
-
-function ResetDayInput() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    
-    dayInput.value = `${year}-${month}-${day}`;
-    dateContainer.textContent = 'Сегодня';
-}
-
-function SetLiveTimeline() {
-    const now = new Date();
-    if (!timeline._isDragging) {
-        timeline.setValue(now.getHours()*60 + now.getMinutes(), false)
-        timeline.thumbElement.textContent = 'ЛАЙВ';
-    }
-}
-
 async function CheckLiveUpdates() {
-    ResetDayInput();
-    SetLiveTimeline();
+    calendar.setDefault();
+    timeline.setDefault();
     await FetchLiveUpdates();
 }
 
@@ -273,11 +330,10 @@ async function StartLiveTimer() {
 
 function StopLiveTimer() {
     clearInterval(liveTimerId);
+    liveTimerId = null;
 }
 
 async function EnableLiveMode() {
-    ResetDayInput();
-    SetLiveTimeline();
     isLive = true;
     StartLiveTimer();
 }
@@ -285,7 +341,6 @@ async function EnableLiveMode() {
 function DisableLiveMode() {
     isLive = false;
     StopLiveTimer();
-    liveTimerId = null;
 }
 
 async function onVisibilityChange() {
@@ -297,42 +352,34 @@ async function onVisibilityChange() {
 
 /* Inputs */
 async function onTimelineChange() {
-    if (GetSelectedDateTime().getTime() >= (new Date()).getTime()) {
+    if (GetSelectedTime() >= (new Date()).getTime()/1000) {
         await EnableLiveMode();
         return;
     }
-    if (isLive) DisableLiveMode();
+
+    if (isLive)
+        DisableLiveMode();
 
     DrawHistory();
 }
 
-async function onDayInputChange() {
-    const dayStr = dayInput.value;
-    if (!dayStr) {
-        alert('Неверная дата')
-        return;
-    }
-
-    const selectedDay = new Date(dayStr);
+async function onCalendarChange() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (selectedDay.getTime() >= today.getTime()) {
+    if (calendar.value.getTime() >= today.getTime()) {
         await EnableLiveMode();
         return;
     }
 
-    if (isLive) DisableLiveMode();
-
-    dateContainer.textContent = new Intl.DateTimeFormat(
-        'ru-RU', { day: '2-digit', month: '2-digit' }
-    ).format(selectedDay);
+    if (isLive)
+        DisableLiveMode();
 
     await FetchDay();
-    await onTimelineChange();
+    timeline.setValue(timeline.value);
 }
 
-dayInput.addEventListener('change', onDayInputChange);
+calendar.input.addEventListener('change', onCalendarChange);
 timeline.element.addEventListener('change', onTimelineChange);
 document.addEventListener('visibilitychange', onVisibilityChange);
 

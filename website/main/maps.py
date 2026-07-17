@@ -90,7 +90,7 @@ class Map:
 
 TEST_MAP = Map(
     'images/maps/test.png',
-    145/1,
+    10/1,
     [
         Floor(65, 76, 0)
     ]
