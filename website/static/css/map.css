@@ -1,3 +1,172 @@
+:root {
+    --bg: #15181d;
+    --floating-item: #20232a;
+    --line: #707680;
+    --text: #f5f6f8;
+    --blue: #2e63ff;
+    --cyan: #35d4ff;
+    --green: #4ee66b;
+    --red: #ff384c;
+}
+
+body {
+    background-color: var(--bg);
+    padding-left: 1rem;
+    padding-right: 1rem;
+    color: var(--text);
+    font-family: Inter, Roboto, Arial, sans-serif;
+}
+
+.status-bar {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.map-section {
+    /* padding: 0rem; */
+}
+
+.footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.floating-item {
+    box-sizing: border-box;
+    padding: 0.4rem;
+    background-color: var(--floating-item);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow:
+        0 10px 24px rgb(0 0 0 / 35%),
+        inset 0 1px 0 rgb(255 255 255 / 7%);
+}
+
+.calendar-button {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+
+    background-image: url('../images/icons/calendar.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 70%;
+    
+    cursor: pointer;
+    
+    transition: transform 180ms ease, border-color 180ms ease;
+}
+
+@media (hover: hover) {
+    .calendar-button:hover {
+        transform: translateY(-0.3rem);
+        border-color: #8b929e;
+    }
+}
+
+.date-info {
+    box-sizing: border-box;
+
+    font-size: 1rem;
+    
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* .live-dot {
+    width: 0.7rem;
+    height: 0.7rem;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow:
+        0 0 0.5rem var(--green),
+        0 0 0.5rem color-mix(in srgb, var(--green) 55%, transparent);
+    animation: live-blink 1.5s ease-in-out infinite;
+}
+
+@keyframes live-blink {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.42;
+        transform: scale(0.75);
+    }
+} */
+
+.timeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+    width: 100%;
+    height: 4rem;
+
+    box-sizing: border-box;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    
+    touch-action: none;
+}
+
+.timeline__track {
+    position: relative;
+    width: 100%;
+    height: 1rem;
+
+    box-sizing: border-box;
+    padding: 0.2rem;
+    border-radius: 100vw;
+    background-color: #111318;
+}
+
+.timeline__fill {
+    position: relative;
+    top: 0;
+    left: 0;
+    height: 100%;
+
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+}
+
+.timeline__thumb {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+
+    height: 2rem;
+    box-sizing: border-box;
+    padding: 0.5rem;
+    border-radius: 5px;
+}
+
+.timeline__thumb.hover {
+    transform: translate(-50%, -200%);
+}
+
 #mapWrapper {
     position: relative;
     display: inline-block; 
@@ -24,8 +193,4 @@
     width: 14px;
     height: 14px;
     background-color: #ff0000;
-}
-
-#timeInput {
-    width: 100%;
 }

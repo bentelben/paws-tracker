@@ -3,22 +3,39 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>map</title>
         <link rel="stylesheet" href="{% static 'css/map.css' %}">
     </head>
     <body>
-        
-        <div id="mapWrapper"
-             data-live-update-interval="{{ live_update_interval }}"
-             data-history-period="{{ history_period }}"
-             data-fetch-day-url="{% url 'main:api_day' date_str='PLACEHOLDER' %}"
-             data-fetch-live-url="{% url 'main:api_live' last_time=0 %}">
-
-            <img id="mapImage" src="{% static map_image_url %}">
+        <div class="header">
+            <div id="statusBar" class="status-bar">
+                Кошка гуляет по третьему этажу
+            </div>
         </div>
-        <div id="bottomPanel">
-            <input id="dayInput" type="date">
-            <input id="timeInput" type="range" min="0" max="86399" step="1" value="0">
+        <div class="map-section">
+            <div id="mapWrapper"
+                data-live-update-interval="{{ live_update_interval }}"
+                data-history-period="{{ history_period }}"
+                data-fetch-day-url="{% url 'main:api_day' date_str='PLACEHOLDER' %}"
+                data-fetch-live-url="{% url 'main:api_live' last_time=0 %}">
+
+                <img id="mapImage" src="{% static map_image_url %}">
+            </div>
+        </div>
+        <div class="footer">
+            <div id="calendarButton" class="calendar-button floating-item">
+                <input id="dayInput" type="date" style="visibility: hidden; width: 0; height: 0;">
+            </div>
+
+            <div id="dateContainer" class="date-info floating-item"></div>
+
+            <div id="timeline" class="timeline">
+                <div id="timelineTrack" class="timeline__track floating-item">
+                    <div id="timelineFill" class="timeline__fill"></div>
+                    <div id="timelineThumb" class="timeline__thumb floating-item"></div>
+                </div>
+            </div>
         </div>
     </body>
     <script src="{% static 'js/map.js' %}"></script>

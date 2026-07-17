@@ -1,8 +1,115 @@
+/* Timeline input */
+let timeline = {
+    'element': document.getElementById('timeline'),
+    'trackElement': document.getElementById('timelineTrack'),
+    'fillElement': document.getElementById('timelineFill'),
+    'thumbElement': document.getElementById('timelineThumb'),
+    'maxValue': 24*60 - 1,
+    'value': 0,
+    '_valueBeforeTap': 0,
+    '_lastDisplayedValue': '',
+    '_isDragging': false,
+    '_isHovering': false,
+
+    _calcHoverValue(clientX) {
+        const rect = this.trackElement.getBoundingClientRect();
+        return Math.trunc(
+                this.maxValue * Math.min(
+                1,
+                Math.max(
+                    0,
+                    (clientX - rect.left) / rect.width
+                )
+            )
+        );
+    },
+
+    _calcPercent(value) {
+        return 100 * value / this.maxValue;
+    },
+
+    setThumbText(value) {
+        function getTimeString(value) {
+            const hours = Math.trunc(value / 60);
+            const minutes = value % 60;
+            return String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+        }
+        this.thumbElement.textContent = getTimeString(value);
+    },
+
+    setThumbPosition(value) {
+        this.thumbElement.style.left = `${this._calcPercent(value)}%`;
+    },
+
+    setFillPosition(value) {
+        this.fillElement.style.width = `${this._calcPercent(value)}%`;
+    },
+
+    setValue(value, notify = true) {
+        this.value = value;
+        this.setThumbText(value);
+        this.setThumbPosition(value);
+        this.setFillPosition(value);
+        if (notify)
+            this.element.dispatchEvent(new CustomEvent('change'));
+        this._lastDisplayedValue = this.thumbElement.textContent;
+    },
+
+    _onPointerDown(e) {
+        this._isDragging = true;
+        this.setValue(this._calcHoverValue(e.clientX));
+        this.element.setPointerCapture(e.pointerId);
+        e.preventDefault();
+    },
+    _onPointerUp(e) {
+        if (!this._isDragging) return;
+        this._isDragging = false;
+        this.setValue(this._calcHoverValue(e.clientX));
+        e.preventDefault();
+    },
+    _onPointerMove(e) {
+        const value = this._calcHoverValue(e.clientX);
+        if (this._isDragging)
+            this.setFillPosition(value);
+        this.setThumbText(value);
+        this.setThumbPosition(value);
+    },
+    _onPointerEnter(e) {
+        this._valueBeforeTap = this.value;
+        this._lastDisplayedValue = this.thumbElement.textContent;
+        this.thumbElement.classList.add('hover');
+    },
+    _onPointerLeave(e) {
+        this.thumbElement.classList.remove('hover');
+        this.setThumbPosition(this.value);
+        this.thumbElement.textContent = this._lastDisplayedValue;
+    },
+    _onPointerCancel(e) {
+        this.setValue(this._valueBeforeTap);
+    },
+
+    init() {
+        this.element.addEventListener('pointerdown', this._onPointerDown.bind(this));
+        this.element.addEventListener('pointerup', this._onPointerUp.bind(this));
+        this.element.addEventListener('pointermove', this._onPointerMove.bind(this));
+        this.element.addEventListener('pointerenter', this._onPointerEnter.bind(this));
+        this.element.addEventListener('pointerleave', this._onPointerLeave.bind(this));
+        this.element.addEventListener('pointercancel', this._onPointerCancel.bind(this));
+    }
+
+};
+
+timeline.init();
+
+
+/* Calendar input */
+const calendarButton = document.getElementById('calendarButton');
+calendarButton.addEventListener('click', () => { dayInput.showPicker(); });
 
 /* DOM Elements */
 const mapWrapper = document.getElementById('mapWrapper');
 const dayInput = document.getElementById('dayInput');
-const timeInput = document.getElementById('timeInput');
+const dateContainer = document.getElementById('dateContainer');
 
 /* Loading consts */
 const liveUpdateInterval = Number( mapWrapper.dataset.liveUpdateInterval );
@@ -18,7 +125,7 @@ var liveTimerId = null;
 
 function GetSelectedDateTime() {
     const selectedDateTime = new Date(`${dayInput.value}T00:00`);
-    selectedDateTime.setSeconds(selectedDateTime.getSeconds() + parseInt(timeInput.value))
+    selectedDateTime.setSeconds(selectedDateTime.getSeconds() + timeline.value*60); // TODO replace with minutes
     return selectedDateTime;
 }
 
@@ -141,16 +248,20 @@ function ResetDayInput() {
     const day = String(now.getDate()).padStart(2, '0');
     
     dayInput.value = `${year}-${month}-${day}`;
+    dateContainer.textContent = 'Сегодня';
 }
 
-function ResetTimeInput() {
+function SetLiveTimeline() {
     const now = new Date();
-    timeInput.value = now.getHours()*60*60 + now.getMinutes()*60 + now.getSeconds();
+    if (!timeline._isDragging) {
+        timeline.setValue(now.getHours()*60 + now.getMinutes(), false)
+        timeline.thumbElement.textContent = 'ЛАЙВ';
+    }
 }
 
 async function CheckLiveUpdates() {
     ResetDayInput();
-    ResetTimeInput();
+    SetLiveTimeline();
     await FetchLiveUpdates();
 }
 
@@ -166,7 +277,7 @@ function StopLiveTimer() {
 
 async function EnableLiveMode() {
     ResetDayInput();
-    ResetTimeInput();
+    SetLiveTimeline();
     isLive = true;
     StartLiveTimer();
 }
@@ -185,6 +296,15 @@ async function onVisibilityChange() {
 }
 
 /* Inputs */
+async function onTimelineChange() {
+    if (GetSelectedDateTime().getTime() >= (new Date()).getTime()) {
+        await EnableLiveMode();
+        return;
+    }
+    if (isLive) DisableLiveMode();
+
+    DrawHistory();
+}
 
 async function onDayInputChange() {
     const dayStr = dayInput.value;
@@ -204,22 +324,16 @@ async function onDayInputChange() {
 
     if (isLive) DisableLiveMode();
 
+    dateContainer.textContent = new Intl.DateTimeFormat(
+        'ru-RU', { day: '2-digit', month: '2-digit' }
+    ).format(selectedDay);
+
     await FetchDay();
-    await onTimeInputChange();
-}
-
-async function onTimeInputChange() {
-    if (GetSelectedDateTime().getTime() >= (new Date()).getTime()) {
-        await EnableLiveMode();
-        return;
-    }
-    if (isLive) DisableLiveMode();
-
-    DrawHistory();
+    await onTimelineChange();
 }
 
 dayInput.addEventListener('change', onDayInputChange);
-timeInput.addEventListener('change', onTimeInputChange);
+timeline.element.addEventListener('change', onTimelineChange);
 document.addEventListener('visibilitychange', onVisibilityChange);
 
 EnableLiveMode();
