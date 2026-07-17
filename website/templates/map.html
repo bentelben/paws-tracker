@@ -9,8 +9,12 @@
     </head>
     <body>
         <div class="header">
-            <div id="statusBar" class="status-bar">
-                Кошка гуляет по третьему этажу
+            <div class="menu-button"></div>
+            <div class="status-wrapper">
+                <div class="status-content">
+                    <!-- Не ставить пробелы и переносы строк между спанами!!! -->
+                    <span id="status1"></span><span id="status2" aria-hidden="true"></span>
+                </div>
             </div>
         </div>
         <div class="map-section">
@@ -39,4 +43,5 @@
         </div>
     </body>
     <script src="{% static 'js/map.js' %}?v={{version}}"></script>
+    <script src="{% static 'js/status.js' %}?v={{version}}"></script>
 </html>

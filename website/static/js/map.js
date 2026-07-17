@@ -312,8 +312,9 @@ async function FetchLiveUpdates() {
         DrawLive(data);
         locations = locations.concat(data);
     }
-
 }
+
+
 
 /* Live mode */
 async function CheckLiveUpdates() {

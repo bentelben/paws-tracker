@@ -62,6 +62,12 @@ class GetLiveUpdatesView(View):
 
         return SELECTED_MAP.locationsToJsonResponse(locations)
 
+class GetStatusView(View):
+    def get(self, request: HttpRequest):
+        text = "Кошка гуляет по третьему этажу"
+
+        return JsonResponse({"text": text})
+
 class GenerateDotView(View):
     def get(self, request: HttpRequest):
         last_location = Location.objects.order_by('-time').first()
