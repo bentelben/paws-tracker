@@ -234,7 +234,8 @@ calendar.init();
 /* Global variables */
 var locations = [];
 var isLive = false;
-var liveTimerId = null;
+var liveUpdateTimerId = null;
+var liveElapsedTimeTimerId = null;
 
 function GetSelectedTime() {
     const selectedDateTime = new Date(calendar.value);
@@ -321,15 +322,35 @@ async function CheckLiveUpdates() {
     await FetchLiveUpdates();
 }
 
+function UpdateElapsedTime() {
+    if (locations.length == 0) {
+        calendar.output.textContent = 'Нет данных';
+    } else {
+        const now = new Date();
+        const currentTime = Math.floor(now.getTime()/1000 - now.getTimezoneOffset()*60);
+        const elapsedTime = currentTime - locations[locations.length - 1].time;
+        if (elapsedTime < 0) {
+            // TODO пофиксить
+            calendar.output.textContent = 'только что';
+        } else
+            calendar.output.textContent = `${Math.floor(elapsedTime)} сек назад`;
+    }
+}
+
 async function StartLiveTimer() {
-    if (liveTimerId === null)
-        liveTimerId = setInterval(CheckLiveUpdates, LIVE_UPDATE_INTERVAL*1000);
+    if (liveUpdateTimerId === null)
+        liveUpdateTimerId = setInterval(CheckLiveUpdates, LIVE_UPDATE_INTERVAL*1000);
+    if (liveElapsedTimeTimerId === null)
+        liveElapsedTimeTimerId = setInterval(UpdateElapsedTime, 1000);
     await CheckLiveUpdates();
+    UpdateElapsedTime();
 }
 
 function StopLiveTimer() {
-    clearInterval(liveTimerId);
-    liveTimerId = null;
+    clearInterval(liveUpdateTimerId);
+    clearInterval(liveElapsedTimeTimerId);
+    liveUpdateTimerId = null;
+    liveElapsedTimeTimerId = null;
 }
 
 async function EnableLiveMode() {
@@ -359,8 +380,10 @@ async function onTimelineChange() {
         return;
     }
 
-    if (isLive)
+    if (isLive) {
         DisableLiveMode();
+        calendar.output.textContent = 'Сегодня';
+    }
 
     DrawHistory();
 }
@@ -373,6 +396,7 @@ async function onCalendarChange() {
 
     if (calendar.value.getTime() >= today.getTime()) {
         calendar.setDefault();
+        UpdateElapsedTime();
         await EnableLiveMode();
         return;
     }
