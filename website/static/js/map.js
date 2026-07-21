@@ -14,6 +14,7 @@ let timeline = {
     thumbElement: document.getElementById('timelineThumb'),
     maxValue: 24*60 - 1,
     value: 0,
+    isLive: false,
     _valueBeforeTap: 0,
     _isDragging: false,
     _isHovering: false,
@@ -35,31 +36,51 @@ let timeline = {
         return 100 * value / this.maxValue;
     },
 
-    setThumbText(value) {
+    _setThumbText(value, isLive) {
+        if (isLive) {
+            this.thumbElement.textContent = 'ЛАЙВ';
+            this.thumbElement.classList.add('live');
+            return;
+        }
+
         function getTimeString(value) {
             const hours = Math.trunc(value / 60);
             const minutes = value % 60;
             return String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
         }
         this.thumbElement.textContent = getTimeString(value);    
-        timeline.thumbElement.classList.remove('live');
+        this.thumbElement.classList.remove('live');
     },
 
-    setThumbPosition(value) {
+    _setThumbPosition(value) {
         this.thumbElement.style.left = `${this._calcPercent(value)}%`;
     },
 
-    setFillPosition(value) {
+    _setFillPosition(value) {
         this.fillElement.style.width = `${this._calcPercent(value)}%`;
     },
 
-    setValue(value, notify = true) {
+    getValue() {
+        if (this.isLive) {
+            const now = new Date();
+            return now.getHours()*60 + now.getMinutes();
+        }
+        return this.value;
+    },
+
+    setValue(value, notify = true, resetLive = true) {
+        if (resetLive) this.isLive = false;
         this.value = value;
-        this.setThumbText(value);
-        this.setThumbPosition(value);
-        this.setFillPosition(value);
+        this._setThumbText(value, this.isLive);
+        this._setThumbPosition(value);
+        this._setFillPosition(value);
         if (notify)
             this.element.dispatchEvent(new CustomEvent('change'));
+    },
+
+    setLive(notify = true) {
+        this.isLive = true;
+        this.setValue(this.getValue(), notify, false);
     },
 
     _onPointerDown(e) {
@@ -79,8 +100,8 @@ let timeline = {
         if (this._isDragging) {
             this.setValue(value);
         } else {
-            this.setThumbText(value);
-            this.setThumbPosition(value);
+            this._setThumbText(value, false);
+            this._setThumbPosition(value);
         }
     },
     _onPointerEnter(e) {
@@ -89,17 +110,10 @@ let timeline = {
     },
     _onPointerLeave(e) {
         this.thumbElement.classList.remove('hover');
-        this.setValue(this.value);
+        this.setValue(this.value, false, false);
     },
     _onPointerCancel(e) {
         this.setValue(this._valueBeforeTap);
-    },
-
-    setDefault() {
-        const now = new Date();
-        this.setValue(now.getHours()*60 + now.getMinutes(), false)
-        this.thumbElement.textContent = 'ЛАЙВ';
-        this.thumbElement.classList.add('live');
     },
 
     init() {
@@ -151,8 +165,8 @@ let calendar = {
         this.setValue(this._stringToDate(this.input.value), false);
     },
 
-    setDefault() {
-        this.setValue(new Date(), false);
+    setToday(notify = true) {
+        this.setValue(new Date(), notify);
         this.output.textContent = 'Сегодня';
     },
 
@@ -315,8 +329,8 @@ async function FetchLiveUpdates() {
 
 /* Live mode */
 async function CheckLiveUpdates() {
-    calendar.setDefault();
-    timeline.setDefault();
+    calendar.setToday(false);
+    timeline.setLive(false);
     await FetchLiveUpdates();
 }
 
@@ -374,7 +388,7 @@ async function onVisibilityChange() {
 
 async function onTimelineChange() {
     if (GetSelectedTime()/60 >= Math.floor((new Date()).getTime()/1000/60)) {
-        timeline.setDefault();
+        timeline.setLive(false);
         await EnableLiveMode();
         return;
     }
@@ -394,7 +408,7 @@ async function onCalendarChange() {
     today.setHours(0, 0, 0, 0);
 
     if (calendar.value.getTime() >= today.getTime()) {
-        calendar.setDefault();
+        calendar.setToday(false);
         UpdateElapsedTime();
         await EnableLiveMode();
         return;
