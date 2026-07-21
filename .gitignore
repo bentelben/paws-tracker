@@ -3,3 +3,4 @@ website/.venv/
 website/**/__pycache__/
 
 website/.env
+website/db.sqlite3
