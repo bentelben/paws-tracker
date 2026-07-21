@@ -290,17 +290,19 @@ function DrawLive(newLocations) {
 
 /* API requests */
 async function FetchDay() {
-    const response = await fetch(
-        FETCH_DAY_URL.replace('PLACEHOLDER', calendar.input.value)
-    );
-
-    if (!response.ok) {
+    let response;
+    try {
+        response = await fetch(
+            FETCH_DAY_URL.replace('PLACEHOLDER', calendar.input.value)
+        );
+        if (!response.ok) throw Error();
+    } catch (error) {
         alert('Не удалось загрузить день');
         locations = [];
         return;
     }
 
-    data = await response.json();
+    const data = await response.json();
 
     if (!isLive)
         locations = data;
@@ -309,16 +311,18 @@ async function FetchDay() {
 async function FetchLiveUpdates() {
     const lastTime = (locations.length > 0) ? locations[locations.length-1].time : 0;
 
-    const response = await fetch(
-        FETCH_LIVE_URL.replace('0', lastTime)
-    );
-    
-    if (!response.ok) {
+    let response;
+    try {
+        response = await fetch(
+            FETCH_LIVE_URL.replace('0', lastTime)
+        );
+        if (!response.ok) throw Error();
+    } catch (error) {
         alert('Не удалось загрузить лайв данные');
         return;
     }
 
-    data = await response.json();
+    const data = await response.json();
     
     if (isLive) {
         DrawLive(data);

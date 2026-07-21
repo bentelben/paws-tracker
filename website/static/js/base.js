@@ -11,9 +11,12 @@ const status2 = document.getElementById('status2');
 var statusUpdateTimer = null;
 
 async function UpdateStatus() {
-    const response = await fetch(FETCH_STATUS_URL);
-    
-    if (!response.ok) {
+    let response;
+
+    try {
+        response = await fetch(FETCH_STATUS_URL);
+        if (!response.ok) throw Error();
+    } catch (error) {
         alert('Не удалось загрузить статус');
         return;
     }
