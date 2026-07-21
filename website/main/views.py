@@ -13,6 +13,20 @@ SELECTED_MAP = TEST_MAP
 LIVE_UPDATE_INTERVAL = 10  # seconds
 MAP_MARKER_CAPACITY  = 20
 
+class InfoView(View):
+    def get(self, request: HttpRequest):
+        return render(
+            request,
+            'info.html'
+        )
+
+class HeatView(View):
+    def get(self, request: HttpRequest):
+        return render(
+            request,
+            'heat.html'
+        )
+
 class MapView(View):
     def get(self, request: HttpRequest):
         return render(

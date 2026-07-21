@@ -10,7 +10,7 @@
     </head>
     <body>
         <div class="header">
-            <div class="menu-button"></div>
+            <div id="menuButton" class="menu-button"></div>
             <div id="statusWrapper" class="status-wrapper"
                 data-fetch-url="{% url 'main:api_status' %}"
                 data-update-interval="{{ STATUS_UPDATE_INTERVAL }}"
@@ -21,7 +21,16 @@
                 </div>
             </div>
         </div>
+        <div id="menuWrapper" class="menu-wrapper">
+            <img src="{% static 'images/banner.png' %}" class="banner">
+            <a class="menu__item" href="{% url 'main:info' %}">О нас</a>
+            <a class="menu__item" href="{% url 'main:map' %}">Радар</a>
+            <a class="menu__item" href="{% url 'main:heat' %}">Тепловая карта</a>
+        </div>
         {% block content %}{% endblock content %}
+        <div class="footer">
+            {% block footer %}{% endblock footer %}
+        </div class="footer">
     </body>
     <script src="{% static 'js/base.js' %}?v={{version}}"></script>
     {% block extra_scripts %}{% endblock extra_scripts %}

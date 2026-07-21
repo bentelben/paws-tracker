@@ -18,21 +18,22 @@
             <img class="map__image" src="{% static map_image_url %}?v={{version}}">
         </div>
     </div>
-    <div class="footer">
-        <div id="calendar" class="calendar-button floating-item">
-            <input id="calendarInput" type="date" style="visibility: hidden; width: 0; height: 0;">
-        </div>
+{% endblock content %}
 
-        <div id="calendarOutput" class="date-info floating-item"></div>
+{% block footer %}
+    <div id="calendar" class="calendar-button floating-item">
+        <input id="calendarInput" type="date" style="visibility: hidden; width: 0; height: 0;">
+    </div>
 
-        <div id="timeline" class="timeline">
-            <div id="timelineTrack" class="timeline__track floating-item">
-                <div id="timelineFill" class="timeline__fill"></div>
-                <div id="timelineThumb" class="timeline__thumb floating-item"></div>
-            </div>
+    <div id="calendarOutput" class="date-info floating-item"></div>
+
+    <div id="timeline" class="timeline">
+        <div id="timelineTrack" class="timeline__track floating-item">
+            <div id="timelineFill" class="timeline__fill"></div>
+            <div id="timelineThumb" class="timeline__thumb floating-item"></div>
         </div>
     </div>
-{% endblock content %}
+{% endblock footer %}
 
 {% block extra_scripts %}
     <script src="{% static 'js/map.js' %}?v={{version}}"></script>

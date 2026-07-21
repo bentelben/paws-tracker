@@ -1,3 +1,5 @@
+const menuButton = document.getElementById('menuButton');
+const menuWrapper = document.getElementById('menuWrapper');
 const statusWrapper = document.getElementById('statusWrapper');
 
 const FETCH_STATUS_URL = statusWrapper.dataset.fetchUrl;
@@ -33,3 +35,12 @@ document.addEventListener('visibilitychange', () => {
 });
 statusUpdateTimer = setInterval(UpdateStatus, STATUS_UPDATE_INTERVAL);
 UpdateStatus();
+
+menuButton.addEventListener('click', () => {
+    menuWrapper.classList.toggle('shown');
+});
+
+document.querySelectorAll('.menu__item').forEach(element => {
+    if (element.href === window.location.href)
+        element.classList.add('active');
+});
