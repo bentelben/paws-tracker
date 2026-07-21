@@ -327,6 +327,7 @@ async function FetchLiveUpdates() {
     if (isLive) {
         DrawLive(data);
         locations = locations.concat(data);
+        UpdateElapsedTime();
     }
 }
 
@@ -343,7 +344,7 @@ function UpdateElapsedTime() {
         calendar.output.textContent = 'Нет данных';
     } else {
         const now = new Date();
-        const currentTime = Math.floor(now.getTime()/1000 - now.getTimezoneOffset()*60);
+        const currentTime = Math.floor(now.getTime()/1000);
         const elapsedTime = currentTime - locations[locations.length - 1].time;
         if (elapsedTime < 0) {
             // TODO пофиксить
