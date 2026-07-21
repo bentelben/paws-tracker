@@ -69,7 +69,6 @@ body {
     white-space: nowrap;
 
     width: 100%;
-    padding-left: 0.5rem;
     
     font-size: 2rem;
     font-weight: bold;
@@ -183,6 +182,8 @@ body {
 
     .status-content span {
         text-align: center;
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
     }
 
     .menu-button {
