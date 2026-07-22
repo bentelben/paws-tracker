@@ -9,7 +9,7 @@ mkdir -p ./data/certbot/conf/live/${MAIN_CERTIFICATE_DOMAIN}
 touch ./data/certbot/conf/live/${MAIN_CERTIFICATE_DOMAIN}/fullchain.pem
 touch ./data/certbot/conf/live/${MAIN_CERTIFICATE_DOMAIN}/privkey.pem
 
-docker compose up -d nginx
+docker compose up -d --build
 
 docker compose run --rm certbot certonly \
     --webroot --webroot-path=/var/www/html \
@@ -18,4 +18,4 @@ docker compose run --rm certbot certonly \
     --force-renewal \
     --domains "${HOSTS}"
 
-docker compose down nginx
+docker compose down

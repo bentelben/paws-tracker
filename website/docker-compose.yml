@@ -41,10 +41,14 @@ services:
   nginx:
     image: nginx:1.25-alpine
     ports:
-      - "${NGINX_PORT}:80"
+      - "80:80"
+      - "443:433"
     volumes:
       - ./nginx/templates/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       - static_volume:/app/staticfiles:ro
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - webroot-path:/var/www/html
     environment:
       - NGINX_SERVER_NAME=${HOSTS}
       - MAIN_CERTIFICATE_DOMAIN=${MAIN_CERTIFICATE_DOMAIN}
