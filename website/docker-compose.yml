@@ -19,18 +19,21 @@ services:
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:${DJANGO_APP_PORT}"
+             gunicorn config.wsgi:application --bind 0.0.0.0:${DJANGO_APP_PORT} --workers=${GUNICORN_WORKERS}"
     volumes:
       - static_volume:/app/staticfiles
+    expose:
+      - ${DJANGO_APP_PORT}
     environment:
       - DATABASE_NAME=${DB_NAME}
       - DATABASE_USER=${DB_USER}
       - DATABASE_PASSWORD=${DB_PASSWORD}
-      - DATABASE_HOST=${DB_HOST}
+      - DATABASE_HOST=db
       - DATABASE_PORT=${DB_PORT}
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - ALLOWED_HOSTS=${HOSTS}
+      - STATIC_URL=${STATIC_URL}
     depends_on:
       db:
         condition: service_healthy
@@ -43,12 +46,27 @@ services:
       - ./nginx/templates/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       - static_volume:/app/staticfiles:ro
     environment:
-      - NGINX_SERVER_NAME=${NGINX_SERVER_NAME}
+      - NGINX_SERVER_NAME=${HOSTS}
+      - MAIN_CERTIFICATE_DOMAIN=${MAIN_CERTIFICATE_DOMAIN}
       - DJANGO_APP_PORT=${DJANGO_APP_PORT}
+      - STATIC_URL=${STATIC_URL}
     depends_on:
       web:
         condition: service_started
+  
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - webroot-path:/var/www/html
+    environment:
+      - HOSTS=${HOSTS}
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12d; done;'"
 
 volumes:
   postgres_data:
   static_volume:
+  certbot-etc:
+  certbot-var:
+  webroot-path:
