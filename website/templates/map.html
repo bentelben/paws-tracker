@@ -12,8 +12,8 @@
         <div id="map" class="map"
             data-live-update-interval="{{ live_update_interval }}"
             data-map-marker-capacity="{{ map_marker_capacity }}"
-            data-fetch-day-url="{% url 'main:api_day' date_str='PLACEHOLDER' %}"
-            data-fetch-live-url="{% url 'main:api_live' last_time=0 %}">
+            data-fetch-day-url="{% url 'api:day' date_str='PLACEHOLDER' %}"
+            data-fetch-live-url="{% url 'api:live' last_time=0 %}">
 
             <img class="map__image" src="{% static map_image_url %}?v={{version}}">
         </div>

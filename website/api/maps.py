@@ -5,7 +5,7 @@ from PIL import Image
 from django.http import JsonResponse
 from django.contrib.staticfiles import finders
 
-from main.models import Location
+from api.models import Location
 
 class Marker:
     def __init__(self, x: float, y: float, time: int):
@@ -88,10 +88,16 @@ class Map:
         )
 
 
-TEST_MAP = Map(
-    'images/maps/test.png',
-    10/1,
-    [
-        Floor(65, 76, 0)
-    ]
-)
+MAPS: dict[str, Map] = {
+    'test': Map(
+        'images/maps/test.png',
+        10/1,
+        [
+            Floor(65, 76, 0)
+        ]
+    )
+}
+
+def get_selected_map() -> Map:
+    from django.conf import settings
+    return MAPS[settings.SELECTED_MAP]

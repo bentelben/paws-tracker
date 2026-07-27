@@ -1,3 +1,8 @@
+SELECTED_MAP = 'test'
+STATUS_UPDATE_INTERVAL = 10 # seconds
+LIVE_UPDATE_INTERVAL = 10 # seconds
+MAP_MARKER_CAPACITY = 20
+
 """
 Django settings for config project.
 
@@ -39,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'main',
+    'api',
 ]
 
 MIDDLEWARE = [
