@@ -8,14 +8,14 @@ import django
 django.setup()
 
 from django.utils.timezone import make_aware
-from main.models import Location
+from api.models import Location
 
 from datetime import datetime, timedelta
 import random
 
 Location.objects.all().delete()
 
-interval_seconds = 6
+interval_seconds = 30
 
 current_x = 5.0
 current_y = 4.0
