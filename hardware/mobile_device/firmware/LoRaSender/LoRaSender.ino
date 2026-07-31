@@ -3,7 +3,7 @@
 
 int counter = 1;
 
-const int lora_nss   = 7;
+const int lora_nss   = 8;
 const int lora_rst   = 4;
 const int lora_dio0  = 2;
 
@@ -12,7 +12,7 @@ void setup() {
   while (!Serial);
 
   LoRa.setPins(lora_nss, lora_rst, lora_dio0);
-  LoRa.setSPIFrequency(1E6);
+  //LoRa.setSPIFrequency(1E6);
 
   Serial.println("LoRa Sender");
 
