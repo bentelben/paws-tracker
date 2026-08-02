@@ -129,3 +129,5 @@ STATIC_URL = os.environ.get('STATIC_URL')
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

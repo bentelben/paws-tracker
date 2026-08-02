@@ -14,63 +14,32 @@ services:
       retries: 5
       start_period: 5s
 
-  web:
-    build: .
-    command: >
-      sh -c "python manage.py migrate &&
-             python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:${DJANGO_APP_PORT} --workers=${GUNICORN_WORKERS}"
-    volumes:
-      - static_volume:/app/staticfiles
-    expose:
-      - ${DJANGO_APP_PORT}
-    environment:
-      - DATABASE_NAME=${DB_NAME}
-      - DATABASE_USER=${DB_USER}
-      - DATABASE_PASSWORD=${DB_PASSWORD}
-      - DATABASE_HOST=db
-      - DATABASE_PORT=${DB_PORT}
-      - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=${DEBUG}
-      - ALLOWED_HOSTS=${HOSTS}
-      - STATIC_URL=${STATIC_URL}
-    depends_on:
-      db:
-        condition: service_healthy
-
   nginx:
     image: nginx:1.25-alpine
     ports:
       - "80:80"
-      - "443:433"
+      - "443:443"
     volumes:
       - ./nginx/templates/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       - static_volume:/app/staticfiles:ro
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - webroot-path:/var/www/html
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
     environment:
-      - NGINX_SERVER_NAME=${HOSTS}
+      - NGINX_SERVER_NAME=${IP_ADDRESS} ${DOMAINS}
       - MAIN_CERTIFICATE_DOMAIN=${MAIN_CERTIFICATE_DOMAIN}
       - DJANGO_APP_PORT=${DJANGO_APP_PORT}
       - STATIC_URL=${STATIC_URL}
     depends_on:
       web:
         condition: service_started
-  
+
   certbot:
     image: certbot/certbot
     volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - webroot-path:/var/www/html
-    environment:
-      - HOSTS=${HOSTS}
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12d; done;'"
 
 volumes:
   postgres_data:
   static_volume:
-  certbot-etc:
-  certbot-var:
-  webroot-path:

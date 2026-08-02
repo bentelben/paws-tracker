@@ -1,21 +1,34 @@
-if [ -f .env ]; then
-    export $(cat .env | grep -v '#' | xargs)
-else
-    echo "Ошибка: Файл .env не найден в текущей директории!"
-    exit 1
-fi
+#!/bin/bash
+source .env
 
-mkdir -p ./data/certbot/conf/live/${MAIN_CERTIFICATE_DOMAIN}
-touch ./data/certbot/conf/live/${MAIN_CERTIFICATE_DOMAIN}/fullchain.pem
-touch ./data/certbot/conf/live/${MAIN_CERTIFICATE_DOMAIN}/privkey.pem
+LIVE_PATH="./certbot/conf/live/$MAIN_CERTIFICATE_DOMAIN"
 
-docker compose up -d --build
+mkdir -p "$LIVE_PATH"
 
-docker compose run --rm certbot certonly \
-    --webroot --webroot-path=/var/www/html \
-    --email ${CERTBOT_USER_EMAIL} \
-    --agree-tos --no-eff-email \
+openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+    -keyout "$LIVE_PATH/privkey.pem" \
+    -out "$LIVE_PATH/fullchain.pem" \
+    -subj "/CN=localhost"
+
+docker compose up --force-recreate -d nginx
+
+docker compose run --rm --entrypoint "\
+        rm -fr /etc/letsencrypt/live/$MAIN_CERTIFICATE_DOMAIN" certbot
+
+domain_args=""
+for domain in $DOMAINS; do
+    domain_args="$domain_args -d $domain"
+done
+
+docker compose run --rm --entrypoint "\
+  certbot certonly --webroot -w /var/www/certbot \
+    $domain_args \
+    --cert-name $MAIN_CERTIFICATE_DOMAIN \
+    --email $CERTBOT_USER_EMAIL \
+    --rsa-key-size 4096 \
+    --agree-tos \
     --force-renewal \
-    --domains "${HOSTS}"
+    --non-interactive" certbot
 
-docker compose down
+docker compose exec nginx nginx -s reload
+docker compose up -d certbot
