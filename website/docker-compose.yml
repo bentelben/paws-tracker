@@ -32,7 +32,7 @@ services:
         - DATABASE_PORT=${DB_PORT}
         - SECRET_KEY=${SECRET_KEY}
         - DEBUG=${DEBUG}
-        - ALLOWED_HOSTS=${HOSTS}
+        - ALLOWED_HOSTS=${IP_ADDRESS} ${DOMAINS}
         - STATIC_URL=${STATIC_URL}
       depends_on:
         db:
