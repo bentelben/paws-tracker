@@ -108,7 +108,7 @@ body {
 
     z-index: 4;
 
-    height: 100%;
+    height: calc(100% - 3rem);
     width: 100%;
 
     box-sizing: border-box;
@@ -137,6 +137,13 @@ body {
     display: block;
     margin: 2rem auto;
     height: 6rem;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+
+    margin-bottom: auto;
 }
 
 .menu__item {

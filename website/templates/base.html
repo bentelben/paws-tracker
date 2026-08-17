@@ -23,9 +23,19 @@
         </div>
         <div id="menuWrapper" class="menu-wrapper">
             <img src="{% static 'images/banner.png' %}" class="banner">
-            <a class="menu__item" href="{% url 'main:info' %}">О нас</a>
-            <a class="menu__item" href="{% url 'main:map' %}">Радар</a>
-            <a class="menu__item" href="{% url 'main:heat' %}">Тепловая карта</a>
+            <div class="menu">
+                <a class="menu__item" href="{% url 'main:info' %}">О нас</a>
+                <a class="menu__item" href="{% url 'main:map'  %}">Радар</a>
+                <a class="menu__item" href="{% url 'main:heat' %}">Тепловая карта</a>
+            </div>
+            <div class="contacts">
+                <a class="contact__item" href="{{ contacts.telegram }}">
+                    <img>
+                </a>
+                <a class="contact__item" href="{{ contacts.github }}">
+                    <img>
+                </a>
+            </div>
         </div>
         {% block content %}{% endblock content %}
         <div class="footer">

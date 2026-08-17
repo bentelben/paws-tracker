@@ -1,3 +1,10 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import ContactSettings
+
+@admin.register(ContactSettings)
+class ContactSettingsAdmin(admin.ModelAdmin):
+    list_display = (
+        'telegram',
+        'github'
+    )
